@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>CRUD de Empleadas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Gestión de Empleadas</h1>
+
+  <!-- Formulario CREATE -->
+  <section>
+    <h2>Agregar Empleada</h2>
+    <form id="formCreate">
+      <input type="text" id="lastName" placeholder="Nombre(s)" required>
+      <input type="email" id="emails" placeholder="Email" required>
+      <input type="number" id="edad" placeholder="Edad" required>
+      <button type="submit">Agregar</button>
+    </form>
+  </section>
+
+  <!-- Tabla READ -->
+  <section>
+    <h2>Lista de Empleadas</h2>
+    <table id="empleadasTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre(s)</th>
+          <th>Email</th>
+          <th>Edad</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- Script CRUD -->
+  <script>
+    const apiUrl = "http://localhost:3000";
+
+    // CREATE
+    document.getElementById("formCreate").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const lastName = document.getElementById("lastName").value;
+      const emails = document.getElementById("emails").value;
+      const edad = document.getElementById("edad").value;
+
+      await fetch(`${apiUrl}/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lastName, emails, edad })
+      });
+
+      e.target.reset();
+      cargarEmpleadas();
+    });
+
+    // READ
+    async function cargarEmpleadas() {
+      const res = await fetch(`${apiUrl}/read`);
+      const data = await res.json();
+      const tbody = document.querySelector("#empleadasTable tbody");
+      tbody.innerHTML = "";
+
+      data.forEach(emp => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${emp._id}</td>
+          <td><input type="text" value="${emp.names || ""}" data-field="names"></td>
+          <td><input type="email" value="${emp.emails || ""}" data-field="emails"></td>
+          <td><input type="number" value="${emp.edad || ""}" data-field="edad"></td>
+          <td>
+            <button onclick="actualizarEmpleada('${emp._id}', '${emp._rev}', this)">Actualizar</button>
+            <button onclick="eliminarEmpleada('${emp._id}')">Eliminar</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // UPDATE
+    async function actualizarEmpleada(id, rev, btn) {
+      const row = btn.closest("tr");
+      const inputs = row.querySelectorAll("input");
+
+      const updatedData = { _id: id, _rev: rev };
+      inputs.forEach(input => {
+        updatedData[input.dataset.field] = input.value;
+      });
+
+      await fetch(`${apiUrl}/update/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData)
+      });
+
+      cargarEmpleadas();
+    }
+
+    // DELETE
+    async function eliminarEmpleada(id) {
+      await fetch(`${apiUrl}/delete/${id}`, { method: "DELETE" });
+      cargarEmpleadas();
+    }
+
+    // Cargar al inicio
+    cargarEmpleadas();
+  </script>
+</body>
+</html>
