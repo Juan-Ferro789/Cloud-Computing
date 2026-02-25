@@ -1,0 +1,18 @@
+{
+
+  "name": "Cloud-Taller",
+
+  "version": "1.0.0",
+
+  "description": "prueba para Laboratorio PaaS",
+
+  "main": "app.js",
+
+  "scripts": {
+
+    "start": "node app.js"
+
+  }
+
+}
+ 
